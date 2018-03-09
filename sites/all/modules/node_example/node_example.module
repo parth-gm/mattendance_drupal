@@ -1,0 +1,209 @@
+<?php
+
+function attendance_menu() {
+  $items['attendance'] = array(
+    'page callback' => 'attendance_page',
+    'access arguments' => array('access content'),
+    'title' => 'Attendance',
+  );
+  return $items;
+}
+
+function attendance_node_info() {
+  return array(
+    'attendance' => array(
+      'name' => t('Attendance'),
+      'base' => 'attendance',
+      'description' => t('This is an example node type with a few fields.'),
+      'title_label' => t('Example Title'),
+      'locked' => TRUE,
+    ),
+  );
+}
+
+function attendance_node_type_insert($content_type) {
+  if ($content_type->type == 'attendance') {
+    
+    $body_instance = node_add_body_field($content_type, t('Example Description'));
+
+    $body_instance['display']['attendance_list'] = array(
+      'label' => 'hidden',
+      'type' => 'text_summary_or_trimmed',
+    );
+
+    // Save our changes to the body field instance.
+    field_update_instance($body_instance);
+
+    // Create all the fields we are adding to our content type.
+    foreach (_attendance_installed_fields() as $field) {
+      field_create_field($field);
+    }
+
+    // Create all the instances for our fields.
+    foreach (_attendance_installed_instances() as $instance) {
+      $instance['entity_type'] = 'node';
+      $instance['bundle'] = 'attendance';
+      field_create_instance($instance);
+    }
+  }
+}
+
+function attendance_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+function attendance_page() {
+  $renderable_array = array();
+  // We query the database and find all of the nodes for the type we defined.
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type AND n.status = :status';
+  $result = db_query($sql,
+    array(
+      ':type' => 'attendance',
+      ':status' => 1,
+    )
+  );
+  $renderable_array['explanation'] = array(
+    '#markup' => t("Node Example nodes you've created will be displayed here. Note that the color fields will be displayed differently in this list, than if you view the node normally. Click on the node title to see the difference. This is a result of using our 'attendance_list' node view type."),
+  );
+  
+  foreach ($result as $row) {
+    $node = node_load($row->nid);
+
+    $renderable_array['node_list'][] = node_view($node, 'attendance_list');
+  }
+  return $renderable_array;
+}
+
+function attendance_entity_info_alter(&$entity_info) {
+  // Add our new view mode to the list of view modes...
+  $entity_info['node']['view modes']['attendance_list'] = array(
+    'label' => t('Attendance List'),
+    'custom settings' => TRUE,
+  );
+}
+
+function attendance_field_formatter_info() {
+  return array(
+    'attendance_colors' => array(
+      'label' => t('Attendance color'),
+      'field types' => array('text'),
+    ),
+  );
+}
+
+function attendance_field_formatter_view($object_type, $object, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  switch ($display['type']) {
+    case 'attendance_colors':
+      foreach ($items as $delta => $item) {
+        $element[$delta]['#type'] = 'markup';
+        $color = $item['safe_value'];
+        $element[$delta]['#markup'] = theme('attendance_color', array('color' => $color));
+      }
+      break;
+  }
+
+  return $element;
+}
+
+function attendance_theme($existing, $type, $theme, $path) {
+  return array(
+    'attendance_color' => array(
+      'variables' => array('color' => NULL),
+    ),
+  );
+}
+
+function attendance_help($path, $arg) {
+  switch ($path) {
+    case 'attendance':
+      return "<p>" . t("The Node Example module provides a custom node type.
+        You can create new Example Node nodes using the <a href='!nodeadd'>node add form</a>.",
+        array('!nodeadd' => url('node/add/attendance'))) . "</p>";
+  }
+}
+
+function theme_attendance_color($variables) {
+  $output = '<span style="background-color: #ccc; padding: 1em; margin-bottom: 1em; float: left; color: ' . $variables['color'] . '">' . $variables['color'] . '</span>';
+  return $output;
+}
+
+function _attendance_installed_fields() {
+  return array(
+    'attendance_color' => array(
+      'field_name' => 'attendance_color',
+      'cardinality' => 3,
+      'type'        => 'text',
+      'settings'    => array(
+        'max_length' => 60,
+      ),
+    ),
+    'attendance_quantity' => array(
+      'field_name'  => 'attendance_quantity',
+      'cardinality' => 1,
+      'type'        => 'text',
+    ),
+    'attendance_image' => array(
+      'field_name' => 'attendance_image',
+      'type'       => 'image',
+      'cardinality' => 1,
+    ),
+  );
+}
+
+function _attendance_installed_instances() {
+  return array(
+    'attendance_color' => array(
+      'field_name' => 'attendance_color',
+      'label'       => t('The colors available for this object.'),
+      'widget'      => array(
+        'type'    => 'options_select',
+      ),
+      'display' => array(
+        'attendance_list' => array(
+          'label' => 'hidden',
+          'type' => 'attendance_colors',
+        ),
+      ),
+    ),
+    'attendance_quantity' => array(
+      'field_name'  => 'attendance_quantity',
+      'label' => t('Quantity required'),
+      'type'        => 'text',
+      'widget'      => array(
+        'type'    => 'text_textfield',
+      ),
+      'display' => array(
+        'attendance_list' => array(
+          'label' => 'hidden',
+          'type' => 'hidden',
+        ),
+      ),
+    ),
+    'attendance_image' => array(
+      'field_name'  => 'attendance_image',
+      'label'       => t('Upload an image:'),
+      'required'    => FALSE,
+      'widget' => array(
+        'type'    => 'image_image',
+        'weight'  => 2.10,
+      ),
+      'display' => array(
+        'attendance_list' => array(
+          'label' => 'hidden',
+          'type' => 'image_link_content__thumbnail',
+        ),
+      ),
+    ),
+  );
+}
+
+function _get_subject_list() {
+  $query = db_select('node', 'n')
+    ->fields('n', array('nid', 'title', 'created'))
+    ->condition('status', 1)
+    ->condition('type', 'subject_name')
+    ->orderBy('created', 'DESC') 
+    ->execute(); 
+  return $query;  
+}

@@ -1,0 +1,54 @@
+name = Omega Clean Starterkit
+description = The Omega Clean Starterkit is the simplest starterkit for Omega Five. It offers a limited amount of default regions.
+core = 7.x
+engine = phptemplate
+screenshot = screenshot.png
+version = VERSION
+base theme = omega
+
+; REGIONS
+regions[page_top] = Page Top
+regions[header] = Header
+regions[help] = Help
+regions[content] = Content
+regions[sidebar_first] = Sidebar First
+regions[sidebar_second] = Sidebar Second
+regions[footer] = Footer
+regions[page_bottom] = Page Bottom
+
+; REGION GROUPS (DEFAULTS)
+region_groups[header] = 'Header'
+region_groups[core] = 'Core'
+region_groups[main] = 'Main'
+region_groups[footer] = 'Footer'
+
+; BREAKPONTS (DEFAULTS)
+breakpoints[all] = 'all'
+breakpoints[tablet] = 'all and (min-width: 600px) and (max-width: 1023px)'
+breakpoints[desktop] = 'all and (min-width: 1024px) and (max-width: 1279px)'
+breakpoints[wide] = 'all and (min-width: 1280px)'
+
+; THEME SETTINGS (DEFAULTS)
+settings[styles][scss_html_elements] = 1
+settings[styles][scss_branding] = 1
+settings[styles][scss_breadcrumbs] = 1
+settings[styles][scss_main_menus] = 1
+settings[styles][scss_messages] = 1
+settings[styles][scss_pagers] = 1
+settings[styles][scss_tabs] = 1
+
+; default layout name
+settings[default_layout] = 'omega_clean'
+
+settings[block_demo_mode] = 1
+settings[screen_demo_indicator] = 1
+
+settings[block_demo_excluded_regions][] = 'page_top'
+settings[block_demo_excluded_regions][] = 'page_bottom'
+settings[block_demo_excluded_regions][] = 'help'
+; Information added by Drupal.org packaging script on 2014-10-23
+version = "7.x-5.0-alpha1"
+core = "7.x"
+project = "omega"
+datestamp = "1414101050"
+
