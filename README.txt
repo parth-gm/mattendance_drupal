@@ -1,4 +1,8 @@
 
+
+*  find amsdb.sql file and import it to mysql. 
+
+
 CONTENTS OF THIS FILE
 ---------------------
 
